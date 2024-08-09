@@ -7,5 +7,5 @@ import java.util.Map;
 public class Bingo {
 
     int ganhoCartela;
-    Map<PosicaoGlobo, List<Integer>> globosSorteados;
+    Map<Globo, List<Integer>> globosSorteados;
 }

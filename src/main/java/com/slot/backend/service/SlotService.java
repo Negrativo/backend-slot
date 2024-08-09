@@ -16,8 +16,8 @@ public class SlotService {
     private List<RegraAcertada> regrasAcertadas;
     private List<RegraServ> matrizDeRegras;
     private List<List<Integer>> cartela;
-    private List<PosicaoGlobo> posicoesGlobo;
-    private Map<PosicaoGlobo, List<Integer>> globosSorteados;
+    private List<Posicao> posicoesGlobo;
+    private List<Globo> globosSorteados;
     private List<Integer> bolasSorteadas;
     private List<Integer> numCartela;
     private int qtdeBolasSorteadas = 0;
@@ -34,7 +34,7 @@ public class SlotService {
     private final int valorLinha = 50;
 
     public List<List<Integer>> buscarMatrizCartela() {
-        return montarMatrizRandom(3, 5, 90);
+        return montarMatrizRandom(3, 5, 90, false);
     }
 
     public MatrizJogo buscarMatrizRodilhos(buscarMatrizBody body) {
@@ -46,15 +46,19 @@ public class SlotService {
         this.regrasAcertadas = new ArrayList<>();
         this.matrizDeRegras = Regras.getInstance().criarMatrizRegras();
         this.posicoesGlobo = new ArrayList<>();
-        this.globosSorteados = new HashMap<>();
+        this.globosSorteados = new ArrayList<>();
         this.numLinhas = numLinhas;
         this.valorAposta = valorAposta;
         this.bolasSorteadas = new ArrayList<>();
         this.numCartela = obterNumerosCartela(cartelaBingo);
         this.cartela = cartelaBingo;
+        this.qtdeBolasSorteadas = 0;
+        this.ganhoCartela = 0;
+        this.qtdeGlobo = 0;
+
         construirMatrizReal();
         conferirRegras();
-        return new MatrizJogo(matrizReal, regrasAcertadas, globosSorteados);
+        return new MatrizJogo(matrizReal, regrasAcertadas, globosSorteados, ganhoCartela);
     }
 
     private List<Integer> obterNumerosCartela(List<List<Integer>> cartela) {
@@ -63,9 +67,20 @@ public class SlotService {
                 .collect(Collectors.toList());
     }
 
+    private int contarNumeroNove(List<List<Integer>> matriz) {
+        int count = 0;
+        for (List<Integer> linha : matriz) {
+            for (Integer numero : linha) {
+                if (numero == 9) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
 
     public void construirMatrizReal() {
-        this.matrizReal = montarMatrizRandom(3, 5, 10);
+        this.matrizReal = montarMatrizRandom(3, 5, 10, true);
 
         int somaGanhos = this.regrasAcertadas.stream().mapToInt(regraAcertada -> regraAcertada.valor).sum();
 
@@ -78,13 +93,13 @@ public class SlotService {
         if (this.qtdeGlobo >= 4 && this.valorBingo + somaGanhos > this.maxPremio) {
             this.construirMatrizReal();
         }
-
     }
 
-    public List<List<Integer>> montarMatrizRandom(int linhas, int colunas, int nuMaximo) {
+    public List<List<Integer>> montarMatrizRandom(int linhas, int colunas, int nuMaximo, boolean permitirRepetidos) {
         List<List<Integer>> matriz = new ArrayList<>();
         List<Integer> arrayNumeros = new ArrayList<>();
         Random rand = new Random();
+        int contadorNove = 0;
 
         for (int z = 1; z <= colunas; z++) {
             List<Integer> array = new ArrayList<>();
@@ -94,6 +109,13 @@ public class SlotService {
                 // nao pode ter mais de um globo(item9) por linha
                 if (nuRandom == 9) {
                     while (array.contains(nuRandom)) {
+                        nuRandom = rand.nextInt(nuMaximo) + 1;
+                    }
+                }
+
+                // Se não permitir repetidos, verifica se o número já foi gerado
+                if (!permitirRepetidos) {
+                    while (arrayNumeros.contains(nuRandom)) {
                         nuRandom = rand.nextInt(nuMaximo) + 1;
                     }
                 }
@@ -150,7 +172,7 @@ public class SlotService {
             for (int y = 0; y < coluna.size(); y++) {
                 int linha = coluna.get(y);
                 if (linha == 9) {
-                    this.posicoesGlobo.add(new PosicaoGlobo(i, y));
+                    this.posicoesGlobo.add(new Posicao(y, i));
                     this.qtdeGlobo++;
                 }
             }
@@ -158,13 +180,14 @@ public class SlotService {
 
         if (this.qtdeGlobo >= 4) {
             sortearGlobos();
+            conferirGanhoCartela();
         }
     }
 
 
     private void sortearGlobos() {
         Random random = new Random();
-        for (PosicaoGlobo posicao : posicoesGlobo) {
+        for (Posicao posicao : posicoesGlobo) {
             List<Integer> numerosSorteados = new ArrayList<>();
 
             int nuMaxSorteio = 5;
@@ -188,7 +211,7 @@ public class SlotService {
 
             }
             bolasSorteadas.addAll(numerosSorteados);
-            globosSorteados.put(posicao, numerosSorteados);
+            globosSorteados.add(new Globo( posicao, numerosSorteados));
         }
 
     }
@@ -316,6 +339,5 @@ public class SlotService {
             ganhoCartela = valorBingo;
         }
     }
-
 
 }

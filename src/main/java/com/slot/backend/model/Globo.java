@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 
+import java.util.List;
+
 @Data
 @Getter
 @AllArgsConstructor
-public class Posicao {
-    public int linha = 0;
-    public int coluna = 0;
+public class Globo {
+    Posicao posicao;
+    List<Integer> bolasSorteadas;
 }
