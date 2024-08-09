@@ -20,13 +20,14 @@ public class SlotService {
     private List<Globo> globosSorteados;
     private List<Integer> bolasSorteadas;
     private List<Integer> numCartela;
+
     private int qtdeBolasSorteadas = 0;
-    private int ganhoCartela;
+    private int ganhoCartela = 0;
     private int valorAposta = 1;
     private int numLinhas = 1;
-    private int maxPremio = 0;
     private int qtdeGlobo = 0;
 
+    private final int maxPremio = 100000; //Considerar mudar
     private final int valorBingo = 1000;
     private final int valorContorno = 500;
     private final int valorH = 300;
@@ -57,7 +58,7 @@ public class SlotService {
         this.qtdeGlobo = 0;
 
         construirMatrizReal();
-        conferirRegras();
+
         return new MatrizJogo(matrizReal, regrasAcertadas, globosSorteados, ganhoCartela);
     }
 
@@ -67,20 +68,10 @@ public class SlotService {
                 .collect(Collectors.toList());
     }
 
-    private int contarNumeroNove(List<List<Integer>> matriz) {
-        int count = 0;
-        for (List<Integer> linha : matriz) {
-            for (Integer numero : linha) {
-                if (numero == 9) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    public void construirMatrizReal() {
+    private void construirMatrizReal() {
         this.matrizReal = montarMatrizRandom(3, 5, 10, true);
+
+        conferirRegras();
 
         int somaGanhos = this.regrasAcertadas.stream().mapToInt(regraAcertada -> regraAcertada.valor).sum();
 
@@ -95,11 +86,10 @@ public class SlotService {
         }
     }
 
-    public List<List<Integer>> montarMatrizRandom(int linhas, int colunas, int nuMaximo, boolean permitirRepetidos) {
+    private List<List<Integer>> montarMatrizRandom(int linhas, int colunas, int nuMaximo, boolean permitirRepetidos) {
         List<List<Integer>> matriz = new ArrayList<>();
         List<Integer> arrayNumeros = new ArrayList<>();
         Random rand = new Random();
-        int contadorNove = 0;
 
         for (int z = 1; z <= colunas; z++) {
             List<Integer> array = new ArrayList<>();
@@ -128,7 +118,7 @@ public class SlotService {
         return matriz;
     }
 
-    public void conferirRegras() {
+    private void conferirRegras() {
         // this.regrasAcertadas.clear();
         for (Regra regra : this.matrizDeRegras) {
             if (this.numLinhas < Integer.parseInt(regra.numero)) {
@@ -163,7 +153,7 @@ public class SlotService {
         }
     }
 
-    public void getQuantidadeGlobo() {
+    private void getQuantidadeGlobo() {
         this.posicoesGlobo.clear();
         this.qtdeGlobo = 0;
 
@@ -216,7 +206,7 @@ public class SlotService {
 
     }
 
-    public void conferirGanhoCartela() {
+    private void conferirGanhoCartela() {
         conferirLinhasCartela();
         conferirH();
         conferirContorno();
