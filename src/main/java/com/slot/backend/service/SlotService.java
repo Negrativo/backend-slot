@@ -5,7 +5,10 @@ import com.slot.backend.util.Regras;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,14 +23,14 @@ public class SlotService {
     private List<Globo> globosSorteados;
     private List<Integer> bolasSorteadas;
     private List<Integer> numCartela;
-
     private int qtdeBolasSorteadas = 0;
-    private int ganhoCartela = 0;
+    private int ganhoCartela;
     private int valorAposta = 1;
     private int numLinhas = 1;
+    private int maxPremio = 100000;
     private int qtdeGlobo = 0;
+    private Bingo bingo;
 
-    private final int maxPremio = 100000; //Considerar mudar
     private final int valorBingo = 1000;
     private final int valorContorno = 500;
     private final int valorH = 300;
@@ -58,8 +61,8 @@ public class SlotService {
         this.qtdeGlobo = 0;
 
         construirMatrizReal();
-
-        return new MatrizJogo(matrizReal, regrasAcertadas, globosSorteados, ganhoCartela);
+        Bingo bingo = new Bingo(ganhoCartela, globosSorteados);
+        return new MatrizJogo(matrizReal, regrasAcertadas, bingo);
     }
 
     private List<Integer> obterNumerosCartela(List<List<Integer>> cartela) {
@@ -68,11 +71,12 @@ public class SlotService {
                 .collect(Collectors.toList());
     }
 
-    private void construirMatrizReal() {
-        this.matrizReal = montarMatrizRandom(3, 5, 10, true);
+
+    public void construirMatrizReal() {
+//            this.matrizReal = montarMatrizRandom(3, 5, 10, true);
+        this.matrizReal = montarMatrizMock();
 
         conferirRegras();
-
         int somaGanhos = this.regrasAcertadas.stream().mapToInt(regraAcertada -> regraAcertada.valor).sum();
 
         if (somaGanhos > this.maxPremio) {
@@ -84,6 +88,16 @@ public class SlotService {
         if (this.qtdeGlobo >= 4 && this.valorBingo + somaGanhos > this.maxPremio) {
             this.construirMatrizReal();
         }
+    }
+
+    private List<List<Integer>> montarMatrizMock() {
+        List<List<Integer>> matriz = new ArrayList<>();
+        matriz.add(Arrays.asList(9, 5, 6));
+        matriz.add(Arrays.asList(6, 5, 7));
+        matriz.add(Arrays.asList(9, 4, 5));
+        matriz.add(Arrays.asList(8, 5, 9));
+        matriz.add(Arrays.asList(1, 7, 9));
+        return matriz;
     }
 
     private List<List<Integer>> montarMatrizRandom(int linhas, int colunas, int nuMaximo, boolean permitirRepetidos) {
@@ -110,6 +124,7 @@ public class SlotService {
                     }
                 }
 
+
                 arrayNumeros.add(nuRandom);
                 array.add(nuRandom);
             }
@@ -119,7 +134,6 @@ public class SlotService {
     }
 
     private void conferirRegras() {
-        // this.regrasAcertadas.clear();
         for (Regra regra : this.matrizDeRegras) {
             if (this.numLinhas < Integer.parseInt(regra.numero)) {
                 return;
@@ -168,7 +182,7 @@ public class SlotService {
             }
         }
 
-        if (this.qtdeGlobo >= 4) {
+        if (this.qtdeGlobo >= 4 && (this.numLinhas == 20)) {
             sortearGlobos();
             conferirGanhoCartela();
         }
@@ -201,9 +215,8 @@ public class SlotService {
 
             }
             bolasSorteadas.addAll(numerosSorteados);
-            globosSorteados.add(new Globo( posicao, numerosSorteados));
+            globosSorteados.add(new Globo(posicao, numerosSorteados));
         }
-
     }
 
     private void conferirGanhoCartela() {

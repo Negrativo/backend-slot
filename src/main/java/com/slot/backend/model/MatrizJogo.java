@@ -11,6 +11,5 @@ import java.util.Map;
 public class MatrizJogo {
     private List<List<Integer>> matrizReal;
     private List<RegraAcertada> regrasAcertadas;
-    private List<Globo> globosSorteados;
-    private int ganhoCartela;
+    private Bingo bingo;
 }
